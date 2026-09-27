@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
+  Bell,
+  BellOff,
   Bird,
   Dog,
   Download,
@@ -15,6 +17,7 @@ import {
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
 import { apiGet, apiPost } from "@/lib/api";
+import { playWildAlertChime, unlockAudio } from "@/lib/chime";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import DetectionCard from "@/components/DetectionCard";
@@ -40,7 +43,15 @@ const CATEGORY_LABEL: Record<CategoryFilter, string> = {
 
 export default function Dashboard() {
   const [filter, setFilter] = useState<CategoryFilter>("all");
+  const [soundOn, setSoundOn] = useState(() => {
+    try {
+      return localStorage.getItem("ag-wild-alert-sound") !== "off";
+    } catch {
+      return true;
+    }
+  });
   const queryClient = useQueryClient();
+  const seenIdsRef = useRef<Set<string> | null>(null);
 
   const listParams = new URLSearchParams({ limit: "50" });
   if (filter !== "all") listParams.set("category", filter);
@@ -57,6 +68,28 @@ export default function Dashboard() {
     refetchInterval: POLL_MS,
   });
 
+  // Unlock WebAudio on the first gesture (autoplay policy) so later chimes can play.
+  useEffect(() => {
+    const unlock = () => unlockAudio();
+    window.addEventListener("pointerdown", unlock, { once: true });
+    return () => window.removeEventListener("pointerdown", unlock);
+  }, []);
+
+  // Chime + toast when a NEW wild detection lands while the dashboard is open.
+  useEffect(() => {
+    const detections = detectionsQuery.data;
+    if (!detections) return;
+    const seen = seenIdsRef.current;
+    seenIdsRef.current = new Set(detections.map((d) => d.id));
+    if (!seen) return; // first load only baselines the known ids
+    const wildArrival = detections.find((d) => !seen.has(d.id) && d.category === "wild");
+    if (!wildArrival) return;
+    if (soundOn) playWildAlertChime();
+    toast(`Wild alert — ${wildArrival.species} on ${wildArrival.camera ?? "a camera"}`, {
+      description: "A new wild-animal detection just landed.",
+    });
+  }, [detectionsQuery.data, soundOn]);
+
   const simulate = useMutation({
     mutationFn: (category: CategoryFilter) =>
       apiPost<Detection>(
@@ -71,6 +104,30 @@ export default function Dashboard() {
     },
     onError: () => toast.error("Could not record the detection — is the backend running?"),
   });
+
+  const replay = useMutation({
+    mutationFn: (id: string) => apiPost<Detection>(`/detections/${id}/replay`),
+    onSuccess: (d) => {
+      void queryClient.invalidateQueries({ queryKey: ["detections"] });
+      void queryClient.invalidateQueries({ queryKey: ["stats"] });
+      toast.success(
+        `Alerts re-fired for ${d.species} — ${(d.alert_channels ?? []).join(" · ") || "no channels"}`,
+      );
+    },
+    onError: () => toast.error("Could not re-fire alerts — is the backend running?"),
+  });
+
+  const toggleSound = () => {
+    setSoundOn((on) => {
+      const next = !on;
+      try {
+        localStorage.setItem("ag-wild-alert-sound", next ? "on" : "off");
+      } catch {
+        // private mode — the preference just won't persist
+      }
+      return next;
+    });
+  };
 
   const stats = statsQuery.data;
   const detections = detectionsQuery.data;
@@ -174,6 +231,17 @@ export default function Dashboard() {
               ))}
             </div>
             <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                data-testid="sound-toggle-button"
+                aria-pressed={soundOn}
+                aria-label={soundOn ? "Mute wild alert sound" : "Unmute wild alert sound"}
+                title={soundOn ? "Wild alert sound on" : "Wild alert sound off"}
+                onClick={toggleSound}
+              >
+                {soundOn ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+              </Button>
               <p data-testid="last-updated" className="font-mono text-xs text-[#526756]">
                 {detectionsQuery.dataUpdatedAt
                   ? `updated ${format(new Date(detectionsQuery.dataUpdatedAt), "HH:mm:ss")}`
@@ -216,7 +284,12 @@ export default function Dashboard() {
             ) : detections && detections.length > 0 ? (
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3" data-testid="detections-gallery">
                 {detections.map((detection) => (
-                  <DetectionCard key={detection.id} detection={detection} />
+                  <DetectionCard
+                    key={detection.id}
+                    detection={detection}
+                    onReplay={() => replay.mutate(detection.id)}
+                    replayPending={replay.isPending && replay.variables === detection.id}
+                  />
                 ))}
               </div>
             ) : (

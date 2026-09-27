@@ -26,6 +26,7 @@ class Detection(BaseModel):
     created_at: datetime = Field(default_factory=utc_now)
     camera: str | None = None  # which node saw it, e.g. "CAM 01 · North Fence"
     alert_channels: list[AlertChannel] = Field(default_factory=list)  # what fired
+    replay_count: int = 0  # times alerts were re-fired for this row (test path)
 
 
 class DetectionCreate(BaseModel):

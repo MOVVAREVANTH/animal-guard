@@ -3,7 +3,7 @@
 ## What it is
 Two-part site for a Raspberry Pi wildlife/livestock detection system:
 - `/` — landing page (hero with simulated camera viewfinder, How It Works 4 steps, 6-feature grid, architecture pipeline diagram, CTA band, footer with docs/GitHub links).
-- `/dashboard` — live detections gallery: stats bar (Total / Wild / Cattle / Domestic), category filter pills (all/wild/cattle/domestic), detection cards (camera snapshot + Flickr reference side-by-side, species, category badge, confidence bar, camera label chip e.g. "CAM 01 · North Fence", alert-channel badges showing which of email/SMS/WhatsApp fired, timestamp, "More Flickr photos" link), Export CSV button (downloads the filtered history), 10s polling (TanStack Query refetchInterval), empty state, "Simulate Detection" demo button (clearly labeled demo).
+- `/dashboard` — live detections gallery: stats bar (Total / Wild / Cattle / Domestic), category filter pills (all/wild/cattle/domestic), detection cards (camera snapshot + Flickr reference side-by-side, species, category badge, confidence bar, camera label chip e.g. "CAM 01 · North Fence", alert-channel badges showing which of email/SMS/WhatsApp fired, timestamp, "Replay alerts" test-path button, "More Flickr photos" link), Export CSV button (downloads the filtered history), wild-alert chime + toast on new wild detections while open (sound toggle persisted in localStorage `ag-wild-alert-sound`; WebAudio unlocked on first pointerdown), 10s polling (TanStack Query refetchInterval), empty state, "Simulate Detection" demo button (clearly labeled demo).
 
 ## Stack & wiring
 - Backend: FastAPI (`backend/server.py`), routes on `api_router` under `/api`. Resource router: `backend/routers/detections.py`; models `backend/models/detection.py`; Mongo via `lib.db.db` (motor), DB name `app`.
@@ -13,11 +13,12 @@ Two-part site for a Raspberry Pi wildlife/livestock detection system:
 ## API contract (matches user's existing `animal-guard/backend/app.py`)
 - `GET /api/detections?category=wild|cattle|domestic&limit=50` → `[{id, species, category, confidence, image_url, flickr_reference_url, flickr_page_url, created_at}]` sorted newest-first. Invalid category → 400.
 - `GET /api/stats` → `{total, wild, cattle, domestic}`
-- `GET /api/detections/export.csv?category=&limit=500` → `text/csv` attachment (`Content-Disposition`), same filters as the list endpoint, columns: id, species, category, confidence, camera, alert_channels (pipe-joined), image_url, flickr_reference_url, flickr_page_url, created_at
+- `GET /api/detections/export.csv?category=&limit=500` → `text/csv` attachment (`Content-Disposition`), same filters as the list endpoint, columns: id, species, category, confidence, camera, alert_channels (pipe-joined), replay_count, image_url, flickr_reference_url, flickr_page_url, created_at
+- `POST /api/detections/{id}/replay` → test path: re-fires alerts, sets alert_channels to all three, increments replay_count, returns the updated Detection; 404 on unknown id
 - `POST /api/detections` (Pi ingest) and `POST /api/detections/simulate?category=` (demo) → 201 + Detection.
 
 ## Data model
-Mongo collection `detections` (uuid string `id`, not ObjectId). Optional per-row `camera` (node label, e.g. "CAM 01 · North Fence") and `alert_channels` (subset of email/sms/whatsapp — what the Pi dispatched). 14 seeded rows via `backend/seed.py` (idempotent, clear+reinsert): wild 7 (Elephant×2, Zebra, Bear, Bird, Giraffe, Deer), cattle 5 (Cow×2, Sheep×2, Horse), domestic 2 (Dog, Cat), spread across 4 cameras. Images are Unsplash stock URLs. created_at stored aware-UTC, normalized on read.
+Mongo collection `detections` (uuid string `id`, not ObjectId). Optional per-row `camera` (node label, e.g. "CAM 01 · North Fence"), `alert_channels` (subset of email/sms/whatsapp — what the Pi dispatched), and `replay_count` (times the alert path was re-tested). 14 seeded rows via `backend/seed.py` (idempotent, clear+reinsert): wild 7 (Elephant×2, Zebra, Bear, Bird, Giraffe, Deer), cattle 5 (Cow×2, Sheep×2, Horse), domestic 2 (Dog, Cat), spread across 4 cameras. Images are Unsplash stock URLs. created_at stored aware-UTC, normalized on read.
 
 ## Auth
 None — dashboard is open (user's explicit choice).

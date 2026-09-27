@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { format } from "date-fns";
-import { Camera, Clock, ExternalLink, Images, Mail, MessageSquare } from "lucide-react";
+import { Camera, Clock, ExternalLink, Images, Loader2, Mail, MessageSquare, RotateCcw } from "lucide-react";
 import { SiWhatsapp } from "@icons-pack/react-simple-icons";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -14,7 +14,7 @@ const CATEGORY_STYLES: Record<DetectionCategory, { label: string; className: str
 
 const CHANNEL_META: Record<
   AlertChannel,
-  { label: string; icon: ComponentType<{ className?: string }> }
+  { label: string; icon: ComponentType<{ className?: string; title?: string }> }
 > = {
   email: { label: "Email", icon: Mail },
   sms: { label: "SMS", icon: MessageSquare },
@@ -46,7 +46,15 @@ function SnapshotPane({
   );
 }
 
-export default function DetectionCard({ detection }: { detection: Detection }) {
+export default function DetectionCard({
+  detection,
+  onReplay,
+  replayPending = false,
+}: {
+  detection: Detection;
+  onReplay: () => void;
+  replayPending?: boolean;
+}) {
   const category = CATEGORY_STYLES[detection.category];
   const recorded = new Date(detection.created_at);
 
@@ -137,7 +145,7 @@ export default function DetectionCard({ detection }: { detection: Detection }) {
                     variant="outline"
                     className="gap-1 border-[#E5E0D3] bg-[#F2EFE8] px-1.5 py-0 font-mono text-[10px] text-[#526756]"
                   >
-                    <ChannelIcon className="h-3 w-3" />
+                    <ChannelIcon className="h-3 w-3" title="" aria-hidden />
                     {CHANNEL_META[channel].label}
                   </Badge>
                 );
@@ -146,22 +154,38 @@ export default function DetectionCard({ detection }: { detection: Detection }) {
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="inline-flex items-center gap-1.5 text-xs text-[#526756]">
             <Clock className="h-3.5 w-3.5" />
             Detected {format(recorded, "MMM d · HH:mm")}
           </span>
-          <a
-            href={detection.flickr_page_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid={`detection-flickr-link-${detection.id}`}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#2D6A4F] transition-colors duration-200 hover:text-[#C85A17]"
-          >
-            <Images className="h-4 w-4" />
-            More Flickr photos
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              data-testid={`detection-replay-${detection.id}`}
+              onClick={onReplay}
+              disabled={replayPending}
+              className="inline-flex items-center gap-1 text-sm font-medium text-[#526756] transition-colors duration-200 hover:text-[#C85A17] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {replayPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RotateCcw className="h-3.5 w-3.5" />
+              )}
+              Replay alerts
+            </button>
+            <a
+              href={detection.flickr_page_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid={`detection-flickr-link-${detection.id}`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-[#2D6A4F] transition-colors duration-200 hover:text-[#C85A17]"
+            >
+              <Images className="h-4 w-4" />
+              More Flickr photos
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
         </div>
       </div>
     </Card>

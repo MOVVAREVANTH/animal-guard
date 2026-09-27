@@ -8,7 +8,7 @@ from typing import List
 from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Query, Response
-from pymongo import DESCENDING
+from pymongo import DESCENDING, ReturnDocument
 
 from lib.db import db
 from models.detection import Detection, DetectionCreate, DetectionStats, utc_now
@@ -191,14 +191,14 @@ async def export_detections_csv(
     writer = csv.writer(buf)
     writer.writerow(
         ["id", "species", "category", "confidence", "camera", "alert_channels",
-         "image_url", "flickr_reference_url", "flickr_page_url", "created_at"]
+         "replay_count", "image_url", "flickr_reference_url", "flickr_page_url", "created_at"]
     )
     for doc in docs:
         d = Detection(**_normalize(doc))
         writer.writerow(
             [d.id, d.species, d.category, d.confidence, d.camera or "",
-             "|".join(d.alert_channels), d.image_url, d.flickr_reference_url,
-             d.flickr_page_url, d.created_at.isoformat()]
+             "|".join(d.alert_channels), d.replay_count, d.image_url,
+             d.flickr_reference_url, d.flickr_page_url, d.created_at.isoformat()]
         )
 
     return Response(
@@ -206,3 +206,17 @@ async def export_detections_csv(
         media_type="text/csv",
         headers={"Content-Disposition": 'attachment; filename="animal-guard-detections.csv"'},
     )
+
+
+@router.post("/detections/{detection_id}/replay", response_model=Detection)
+async def replay_detection_alerts(detection_id: str):
+    """Test path: re-fire the alert channels for one stored detection."""
+    doc = await db.detections.find_one({"id": detection_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail=f"detection {detection_id} not found")
+    updated = await db.detections.find_one_and_update(
+        {"id": detection_id},
+        {"$set": {"alert_channels": list(ALERT_CHANNELS)}, "$inc": {"replay_count": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
+    return Detection(**_normalize(updated))

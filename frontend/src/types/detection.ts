@@ -14,6 +14,7 @@ export interface Detection {
   created_at: string; // ISO 8601 with UTC offset
   camera?: string | null; // e.g. "CAM 01 · North Fence" — absent on rows the Pi posted without one
   alert_channels?: AlertChannel[]; // which alert channels fired
+  replay_count?: number; // times alerts were re-fired for this row (test path)
 }
 
 export interface DetectionStats {
