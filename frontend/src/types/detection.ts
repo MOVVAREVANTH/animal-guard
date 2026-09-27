@@ -15,6 +15,7 @@ export interface Detection {
   camera?: string | null; // e.g. "CAM 01 · North Fence" — absent on rows the Pi posted without one
   alert_channels?: AlertChannel[]; // which alert channels fired
   replay_count?: number; // times alerts were re-fired for this row (test path)
+  source?: string; // "pi" | "web-demo"
 }
 
 export interface DetectionStats {
@@ -22,6 +23,16 @@ export interface DetectionStats {
   wild: number;
   cattle: number;
   domestic: number;
+}
+
+// Mirrors IdentifyResult in backend/models/detection.py
+export interface IdentifyResult {
+  is_animal: boolean;
+  species?: string | null;
+  category?: DetectionCategory | null;
+  confidence?: number | null;
+  note?: string | null;
+  detection?: Detection | null;
 }
 
 export type CategoryFilter = "all" | DetectionCategory;

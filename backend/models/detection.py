@@ -27,6 +27,23 @@ class Detection(BaseModel):
     camera: str | None = None  # which node saw it, e.g. "CAM 01 · North Fence"
     alert_channels: list[AlertChannel] = Field(default_factory=list)  # what fired
     replay_count: int = 0  # times alerts were re-fired for this row (test path)
+    source: str = "pi"  # "pi" (edge node) | "web-demo" (browser upload/webcam)
+
+
+class IdentifyRequest(BaseModel):
+    """A browser upload or webcam frame to run through the vision model."""
+
+    image_base64: str  # raw base64 or a data: URL
+    mime_type: str = "image/jpeg"
+
+
+class IdentifyResult(BaseModel):
+    is_animal: bool
+    species: str | None = None
+    category: Category | None = None
+    confidence: float | None = None
+    note: str | None = None  # why nothing was detected, or extra detail
+    detection: Detection | None = None  # set when the result was logged
 
 
 class DetectionCreate(BaseModel):

@@ -11,7 +11,15 @@ from fastapi import APIRouter, HTTPException, Query, Response
 from pymongo import DESCENDING, ReturnDocument
 
 from lib.db import db
-from models.detection import Detection, DetectionCreate, DetectionStats, utc_now
+from lib.vision import VisionUnavailable, identify_species
+from models.detection import (
+    Detection,
+    DetectionCreate,
+    DetectionStats,
+    IdentifyRequest,
+    IdentifyResult,
+    utc_now,
+)
 
 router = APIRouter()
 
@@ -25,6 +33,13 @@ CAMERAS = (
     "CAM 03 · Barn Door",
     "CAM 04 · South Pasture",
 )
+
+# Fallback reference imagery when an identified species isn't in the catalog.
+CATEGORY_REFERENCE = {
+    "wild": "https://images.unsplash.com/photo-1588508435560-585279aa19de?w=900&q=75&auto=format&fit=crop",
+    "cattle": "https://images.unsplash.com/photo-1569858241634-5aee6e47091a?w=900&q=75&auto=format&fit=crop",
+    "domestic": "https://images.unsplash.com/photo-1680718349543-2016f3e618cd?w=900&q=75&auto=format&fit=crop",
+}
 
 
 def random_alert_channels() -> list[str]:
@@ -205,6 +220,64 @@ async def export_detections_csv(
         content=buf.getvalue(),
         media_type="text/csv",
         headers={"Content-Disposition": 'attachment; filename="animal-guard-detections.csv"'},
+    )
+
+
+def reference_for_species(species: str, category: str) -> str:
+    """Best available reference photo: exact catalog hit, then keyword, then category stock."""
+    if species in SPECIES_CATALOG:
+        return SPECIES_CATALOG[species]["reference"]
+    low = species.lower()
+    for known, meta in SPECIES_CATALOG.items():
+        if known.lower() in low or low in known.lower():
+            return meta["reference"]
+    return CATEGORY_REFERENCE.get(category, CATEGORY_REFERENCE["wild"])
+
+
+@router.post("/detections/identify", response_model=IdentifyResult)
+async def identify_detection(input: IdentifyRequest):
+    """Browser demo: classify an uploaded photo / webcam frame and log it if it's an animal."""
+    try:
+        verdict = await identify_species(input.image_base64, input.mime_type)
+    except ValueError as exc:  # bad/unsupported image payload
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except VisionUnavailable as exc:  # provider down or misconfigured
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    if not verdict["is_animal"]:
+        return IdentifyResult(
+            is_animal=False,
+            note=verdict.get("note") or "No animal found in this image.",
+        )
+
+    species = verdict["species"]
+    category = verdict["category"]
+    mime = "image/jpeg" if input.mime_type in ("", "image/jpg") else input.mime_type
+    snapshot = input.image_base64
+    if not snapshot.startswith("data:"):
+        snapshot = f"data:{mime};base64,{snapshot}"
+
+    detection = Detection(
+        species=species,
+        category=category,
+        confidence=verdict["confidence"],
+        image_url=snapshot,  # the frame the user supplied, inline
+        flickr_reference_url=reference_for_species(species, category),
+        flickr_page_url=flickr_page_url(species),
+        created_at=utc_now(),
+        camera="WEB DEMO · Live Identify",
+        alert_channels=random_alert_channels(),
+        source="web-demo",
+    )
+    await db.detections.insert_one(detection.model_dump())
+
+    return IdentifyResult(
+        is_animal=True,
+        species=species,
+        category=category,
+        confidence=verdict["confidence"],
+        note=verdict.get("note"),
+        detection=detection,
     )
 
 

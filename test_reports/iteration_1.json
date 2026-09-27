@@ -1,0 +1,102 @@
+{
+  "iteration": 1,
+  "passed": 13,
+  "failed": 0,
+  "bugs": [],
+  "action_items": [],
+  "retest_needed": false,
+  "checks": [
+    {
+      "criterion": "Backend read endpoints match the documented contract (GET /api/detections)",
+      "name": "test_tscheck_detections_stats_contract.py::test_detections_list_wild_category_contract",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "GET /api/detections?category=wild&limit=50 -> 200, rows contain id/species/category/confidence/image_url/flickr_reference_url/flickr_page_url/created_at, newest-first"
+    },
+    {
+      "criterion": "Backend read endpoints match the documented contract (invalid category)",
+      "name": "test_tscheck_detections_stats_contract.py::test_detections_list_invalid_category_400",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "GET /api/detections?category=not-a-real-category -> 400"
+    },
+    {
+      "criterion": "Backend read endpoints match the documented contract (GET /api/stats)",
+      "name": "test_tscheck_detections_stats_contract.py::test_stats_contract",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "GET /api/stats -> 200 {total,wild,cattle,domestic}, total >= wild+cattle+domestic"
+    },
+    {
+      "criterion": "Invalid image payloads return 422 from the identify endpoint (bad base64)",
+      "name": "test_tscheck_identify_invalid_payloads.py::test_identify_invalid_base64",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "POST /api/detections/identify {image_base64:'not-base64!!'} -> 422, detail mentions base64"
+    },
+    {
+      "criterion": "Invalid image payloads return 422 from the identify endpoint (unsupported mime)",
+      "name": "test_tscheck_identify_invalid_payloads.py::test_identify_unsupported_mime_type",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "POST /api/detections/identify mime_type=image/gif -> 422, detail names supported types"
+    },
+    {
+      "criterion": "Invalid image payloads return 422 from the identify endpoint (missing field)",
+      "name": "test_tscheck_identify_invalid_payloads.py::test_identify_missing_image_base64",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "POST /api/detections/identify without image_base64 -> 422"
+    },
+    {
+      "criterion": "Landing page and shared navigation are intact",
+      "name": "landing-page-intact",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "hero-title visible with 'Animal Guard' text, how-it-works/features/architecture sections visible, hero-cta-dashboard navigates to /dashboard where live-identify-panel is visible, no console errors"
+    },
+    {
+      "criterion": "Existing dashboard features still work after the Live Identify addition",
+      "name": "dashboard-existing-features",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Simulate Detection bumped stat-total-value by 1; Replay alerts showed success toast; Export CSV downloaded animal-guard-detections.csv; sound-toggle-button aria-pressed flipped"
+    },
+    {
+      "criterion": "Existing dashboard features still work after the Live Identify addition (category filters)",
+      "name": "dashboard-category-filter-narrows",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "filter-wild narrowed all detection-category-* badges to text 'Wild'; filter-cattle narrowed to 'Cattle'"
+    },
+    {
+      "criterion": "Webcam capture path degrades gracefully when no camera device exists",
+      "name": "identify-camera-no-device-fallback",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Clicking identify-camera-button in headless (no camera) surfaced a camera-related error message; panel and file input remained usable, no crash/stuck spinner"
+    },
+    {
+      "criterion": "Live Identify panel: upload a real animal photo and get a species identification",
+      "name": "identify-animal-photo-creates-detection",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Uploaded /tmp/bear.jpg -> identify-result-species 'Brown Bear', identify-result-category 'wild', identify-result-confidence '99.0%' shown within timeout"
+    },
+    {
+      "criterion": "An identified animal is logged into the dashboard as a real detection tagged as a web demo",
+      "name": "identify-animal-photo-creates-detection",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "stat-total-value incremented by 1 after identify; newest card shows detection-source-* chip with 'Web demo' text and camera label 'WEB DEMO \u00b7 Live Identify'"
+    },
+    {
+      "criterion": "Non-animal image is rejected gracefully without creating a detection",
+      "name": "identify-non-animal-image-rejected",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Uploaded /tmp/obj.jpg (circuit board) -> identify-result-none shown, stat-total-value unchanged, zero pageerror events captured"
+    }
+  ],
+  "notes": "8 acceptance-matrix criteria covered by 6 backend tests + 7 browser checks (13 total artifacts; the two identify-related criteria share one browser check since both are asserted by the same real vision call). All backend tests hit the live localhost:8001 server/Mongo; all browser checks ran against localhost:3000 per Cloudflare guidance for the public host."
+}

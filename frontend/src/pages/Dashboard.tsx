@@ -22,6 +22,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import DetectionCard from "@/components/DetectionCard";
 import Footer from "@/components/Footer";
+import LiveIdentify from "@/components/LiveIdentify";
 import Navbar from "@/components/Navbar";
 import type { CategoryFilter, Detection, DetectionStats } from "@/types/detection";
 
@@ -187,8 +188,16 @@ export default function Dashboard() {
         </section>
 
         <section className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:py-12">
+          {/* Live identify demo — upload or webcam, classified by the vision model */}
+          <LiveIdentify
+            onLogged={() => {
+              void queryClient.invalidateQueries({ queryKey: ["detections"] });
+              void queryClient.invalidateQueries({ queryKey: ["stats"] });
+            }}
+          />
+
           {/* Stats bar */}
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4" data-testid="stats-bar">
+          <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4" data-testid="stats-bar">
             {statsCards.map((card) => (
               <Card key={card.testid} data-testid={card.testid} className="gap-0 py-0">
                 <div className="p-5">

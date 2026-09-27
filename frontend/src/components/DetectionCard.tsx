@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { format } from "date-fns";
-import { Camera, Clock, ExternalLink, Images, Loader2, Mail, MessageSquare, RotateCcw } from "lucide-react";
+import { Camera, Clock, ExternalLink, Images, Loader2, Mail, MessageSquare, RotateCcw, Sparkles } from "lucide-react";
 import { SiWhatsapp } from "@icons-pack/react-simple-icons";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -84,6 +84,18 @@ export default function DetectionCard({
           {category.label}
         </Badge>
       </div>
+
+      {detection.source === "web-demo" && (
+        <div className="px-5 pb-3">
+          <span
+            data-testid={`detection-source-${detection.id}`}
+            className="inline-flex items-center gap-1 rounded-full border border-[#E5E0D3] bg-[#FBF9F4] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-[#C85A17]"
+          >
+            <Sparkles className="h-3 w-3" />
+            Web demo
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-2 px-5">
         <SnapshotPane
