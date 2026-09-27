@@ -1,0 +1,168 @@
+{
+  "theme": "light",
+  "archetype": "ARCHETYPE 1: ORGANIC & EARTHY (Trust, Growth, Calm) blended with Precision Edge IoT",
+  "colors": {
+    "surfaces": [
+      {
+        "name": "page",
+        "kind": "solid",
+        "bg": "#FBF9F4",
+        "on_bg": "#1C2A1E",
+        "on_bg_muted": "#4B5E4F"
+      },
+      {
+        "name": "panel",
+        "kind": "solid",
+        "bg": "#FFFFFF",
+        "on_bg": "#142416",
+        "on_bg_muted": "#526756"
+      },
+      {
+        "name": "panel_alt",
+        "kind": "solid",
+        "bg": "#F2EFE8",
+        "on_bg": "#142416",
+        "on_bg_muted": "#526756"
+      },
+      {
+        "name": "forest_banner",
+        "kind": "solid",
+        "bg": "#142B1B",
+        "on_bg": "#F5F8F5",
+        "on_bg_muted": "#B2CEB8"
+      },
+      {
+        "name": "inverse",
+        "kind": "solid",
+        "bg": "#0D1E12",
+        "on_bg": "#F5F8F5",
+        "on_bg_muted": "#9FB8A4"
+      },
+      {
+        "name": "badge_wild",
+        "kind": "solid",
+        "bg": "#FEF2F2",
+        "on_bg": "#991B1B",
+        "on_bg_muted": "#B91C1C"
+      },
+      {
+        "name": "badge_cattle",
+        "kind": "solid",
+        "bg": "#FEF3C7",
+        "on_bg": "#92400E",
+        "on_bg_muted": "#B45309"
+      },
+      {
+        "name": "badge_domestic",
+        "kind": "solid",
+        "bg": "#ECFDF5",
+        "on_bg": "#065F46",
+        "on_bg_muted": "#047857"
+      },
+      {
+        "name": "hero",
+        "kind": "gradient",
+        "contrast_against": "#142B1B",
+        "guarantee": "scrim: linear-gradient(135deg, rgba(20,43,27,0.95) 0%, rgba(27,67,50,0.88) 100%)",
+        "on_bg": "#FFFFFF",
+        "on_bg_muted": "#D1E7D6",
+        "roles": {
+          "link": "#FBBF24",
+          "error": "#FCA5A5",
+          "success": "#6EE7B7"
+        }
+      }
+    ],
+    "accent": "#C85A17",
+    "on_accent": "#FFFFFF",
+    "accent_secondary": "#2D6A4F",
+    "on_accent_secondary": "#FFFFFF"
+  },
+  "typography": {
+    "fonts": {
+      "heading": "Outfit Variable",
+      "body": "DM Sans Variable",
+      "mono": "JetBrains Mono Variable"
+    },
+    "scale_px": {
+      "display": 56,
+      "h1": 44,
+      "h2": 32,
+      "h3": 22,
+      "body": 16,
+      "caption": 14
+    },
+    "pairing_rules": "Outfit (bold, friendly, modern tech headings) + DM Sans (grounded, natural, high-legibility body) + JetBrains Mono (precision telemetry, timestamps, confidence scores, hardware specs)"
+  },
+  "entry_surfaces": {
+    "/": "split hero — earthy dark green gradient hero with headline, live status badge & dual CTA left, interactive hardware-to-cloud live preview card right",
+    "/dashboard": "precision telemetry grid — live stats bar top, filter pills and simulated detection demo CTA, followed by side-by-side snapshot vs Flickr reference gallery"
+  },
+  "grids": {
+    "landing_how_it_works": "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6",
+    "landing_features": "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8",
+    "landing_architecture": "grid-cols-1 lg:grid-cols-12 gap-8 items-center",
+    "dashboard_stats": "grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6",
+    "dashboard_gallery": "grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+  },
+  "motion": {
+    "default_transition": "transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease",
+    "card_hover": "hover:-translate-y-1 hover:shadow-lg hover:border-[#2D6A4F]/40 transition duration-200",
+    "live_pulse": "animate-pulse ring-2 ring-emerald-500/40",
+    "toast_position": "bottom-right"
+  },
+  "accessibility": {
+    "contrast_standard": "APCA & WCAG AA minimum 4.5:1 text-to-surface contrast",
+    "focus_indicators": "focus-visible:ring-2 focus-visible:ring-[#2D6A4F] focus-visible:outline-none",
+    "data_testids": "All interactive elements, buttons, tabs, filter pills, stat numbers, detection cards have explicit data-testid attributes."
+  },
+  "image_urls": {
+    "hero_nature_backdrop": {
+      "category": "hero",
+      "url": "https://images.unsplash.com/photo-1542997830-49fc838e4c61?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzN8MHwxfHNlYXJjaHwxfHx3aWxkJTIwZGVlciUyMGJlYXIlMjBmYXJtJTIwcGFzdHVyZSUyMGFuaW1hbHxlbnwwfHx8fDE3OTA1MDE4NDZ8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Wild deer standing on green grass field in pasture perimeter"
+    },
+    "feature_wildlife": {
+      "category": "features_wild",
+      "url": "https://images.unsplash.com/photo-1588508435560-585279aa19de?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzN8MHwxfHNlYXJjaHwyfHx3aWxkJTIwZGVlciUyMGJlYXIlMjBmYXJtJTIwcGFzdHVyZSUyMGFuaW1hbHxlbnwwfHx8fDE3OTA1MDE4NDZ8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Wild majestic deer near forest fringe"
+    },
+    "feature_cattle": {
+      "category": "features_cattle",
+      "url": "https://images.unsplash.com/photo-1569858241634-5aee6e47091a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzOTB8MHwxfHNlYXJjaHwxfHxjYXR0bGUlMjBjb3clMjBzaGVlcCUyMGZhcm0lMjBmaWVsZCUyMHBhc3R1cmV8ZW58MHx8fHwxNzkwNTAxODQ2fDA&ixlib=rb-4.1.0&q=85",
+      "description": "Cattle and livestock roaming farm pasture"
+    },
+    "sample_snapshot_camera": {
+      "category": "detection_card_snapshot",
+      "url": "https://images.unsplash.com/photo-1599180469126-0defe37b368b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHw0fHxyYXNwYmVycnklMjBwaSUyMGNhbWVyYSUyMHdpbGRsaWZlJTIwZGV0ZWN0aW9uJTIwZmFybXxlbnwwfHx8fDE3OTA1MDE4NDZ8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Camera capture of brown deer during daytime detection"
+    },
+    "sample_reference_flickr": {
+      "category": "detection_card_reference",
+      "url": "https://images.unsplash.com/photo-1570422593863-bd38ef7ce050?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzN8MHwxfHNlYXJjaHwzfHx3aWxkJTIwZGVlciUyMGJlYXIlMjBmYXJtJTIwcGFzdHVyZSUyMGFuaW1hbHxlbnwwfHx8fDE3OTA1MDE4NDZ8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Curated wildlife reference photo from Flickr dataset"
+    }
+  },
+  "component_structure": {
+    "navbar": "Sticky crystal/solid header with brand logo (Animal Guard + shield/camera icon), nav links (Home, How It Works, Features, Architecture, Live Dashboard), and primary CTA 'Open Dashboard'",
+    "landing_hero": "Split layout: Left column with headline, badge, mission statement, primary & secondary CTAs. Right column with interactive simulated camera viewfinder showcasing real-time bounding box and live telemetry",
+    "how_it_works": "4-step interactive pipeline cards: 1. Raspberry Pi Camera Watch → 2. YOLOv8 Edge Inference → 3. Flickr Reference Photo Verification → 4. Multi-Channel Alert Dispatch (Email, SMS, WhatsApp)",
+    "features_grid": "6 visual feature tiles with custom badge indicators, icons, technical details (YOLOv8 nano models, Twilio integration, low-cost RPi compute)",
+    "architecture_flow": "Visual pipeline diagram card connecting Raspberry Pi 4/5 Camera Node → FastAPI Cloud Backend → Flickr API & Twilio Alert Gateway → Real-time React Dashboard",
+    "dashboard_stats_bar": "4 high-impact counters: Total Detections, Wild Animals, Cattle & Livestock, Domestic Animals with delta indicators",
+    "dashboard_controls": "Category filter tabs (All, Wild, Cattle, Domestic), search/filter input, 'Simulate Detection' demo action button, live 10s auto-refresh indicator with pause/resume toggle",
+    "detection_card": "Split card showcasing: Camera Snapshot (with YOLOv8 bounding box overlay preview) vs Flickr Species Reference Photo side-by-side, Species name, Category badge, Confidence score bar, Timestamp (ISO UTC formatted to local), and link to external Flickr photos",
+    "footer": "Deep forest surface with docs, setup guide, GitHub repo download links, Twilio/Flickr API acknowledgments, and system status badge"
+  },
+  "instructions_to_main_agent": [
+    "Template is farm-ts (FastAPI backend at /app/backend, React 19 frontend at /app/frontend).",
+    "Use Tailwind v4 CSS variables in /app/frontend/src/index.css with font imports '@fontsource-variable/outfit' and '@fontsource-variable/dm-sans' and '@fontsource-variable/jetbrains-mono'.",
+    "Ensure both routes exist in App.tsx: '/' for Landing Page and '/dashboard' for Live Dashboard.",
+    "Implement backend endpoints: GET /api/stats, GET /api/detections?category=&limit=50, and POST /api/detections/simulate (for testing and manual trigger).",
+    "Seed rich sample detection records in backend (deer, wild boar, bear, elephant, cow, horse, sheep, dog, cat) with camera snapshot URLs, Flickr reference photos, confidence scores, and timestamps.",
+    "Support 10-second polling on /dashboard via TanStack React Query (refetchInterval: 10000).",
+    "Provide clear empty state when no detections match a filter.",
+    "Include data-testid on every button, link, filter pill, stat card, detection card, and input.",
+    "Follow the warm earthy palette: Cream background (#FBF9F4), Deep forest green (#142B1B, #2D6A4F), Warm amber/terracotta accent (#C85A17), and crisp card panels (#FFFFFF)."
+  ]
+}
