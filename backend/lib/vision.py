@@ -27,7 +27,7 @@ SYSTEM_MESSAGE = """You are the species classifier inside Animal Guard, a farm c
 You look at one camera frame and identify the single most prominent animal.
 
 Reply with ONLY a JSON object, no markdown fence, no commentary:
-{"is_animal": bool, "species": string|null, "category": "wild"|"cattle"|"domestic"|null, "confidence": number, "note": string|null}
+{"is_animal": bool, "species": string|null, "category": "wild"|"cattle"|"domestic"|null, "confidence": number, "box": {"x": number, "y": number, "w": number, "h": number}|null, "note": string|null}
 
 Rules:
 - "species" is the common English name, singular, Capitalised (e.g. "Elephant", "Red Deer", "Cow").
@@ -35,8 +35,12 @@ Rules:
   "domestic" for pets (dog, cat, rabbit); "wild" for everything wild (deer, bear, bird,
   elephant, zebra, giraffe, fox, boar, monkey...).
 - "confidence" is 0-100, your genuine certainty in the species call.
+- "box" is the tight bounding box around that animal, as FRACTIONS of the image size:
+  x = left edge, y = top edge, w = width, h = height, each between 0 and 1
+  (x=0,y=0 is the top-left corner). Make it snug around the animal's full visible body.
+  Set box to null only if you truly cannot localise it.
 - If there is no animal (empty field, person only, object, blurry nothing), set
-  is_animal false, species/category null, confidence 0, and put the reason in "note".
+  is_animal false, species/category/box null, confidence 0, and put the reason in "note".
 - A human alone is NOT an animal for this system."""
 
 
@@ -91,6 +95,29 @@ def _parse_json_object(text: str) -> dict:
         raise VisionUnavailable(f"model returned malformed JSON: {text[:200]}") from exc
 
 
+def _parse_box(raw: object) -> dict | None:
+    """Clamp a model-supplied box to the 0-1 unit square; None if unusable."""
+    if not isinstance(raw, dict):
+        return None
+    try:
+        x = float(raw.get("x"))  # type: ignore[arg-type]
+        y = float(raw.get("y"))  # type: ignore[arg-type]
+        w = float(raw.get("w"))  # type: ignore[arg-type]
+        h = float(raw.get("h"))  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    # Some models answer in percentages — normalise those back to fractions.
+    if max(x, y, w, h) > 1.5:
+        x, y, w, h = x / 100.0, y / 100.0, w / 100.0, h / 100.0
+    x = min(max(x, 0.0), 1.0)
+    y = min(max(y, 0.0), 1.0)
+    w = min(max(w, 0.0), 1.0 - x)
+    h = min(max(h, 0.0), 1.0 - y)
+    if w <= 0.01 or h <= 0.01:  # degenerate box is worse than no box
+        return None
+    return {"x": round(x, 4), "y": round(y, 4), "w": round(w, 4), "h": round(h, 4)}
+
+
 async def identify_species(image_base64: str, mime_type: str) -> dict:
     """Classify the animal in one frame. Returns the parsed model verdict."""
     api_key = os.environ.get("EMERGENT_LLM_KEY")
@@ -143,5 +170,6 @@ async def identify_species(image_base64: str, mime_type: str) -> dict:
         "species": species if is_animal else None,
         "category": category if is_animal else None,
         "confidence": round(confidence, 1) if is_animal else 0.0,
+        "box": _parse_box(verdict.get("box")) if is_animal else None,
         "note": verdict.get("note") or None,
     }

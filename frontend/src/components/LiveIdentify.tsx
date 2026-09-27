@@ -15,6 +15,7 @@ import { apiPost } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import SnapshotWithBox from "@/components/SnapshotWithBox";
 import type { DetectionCategory, IdentifyResult } from "@/types/detection";
 
 const MAX_EDGE = 900; // downscale before upload — keeps payloads small
@@ -312,12 +313,21 @@ export default function LiveIdentify({ onLogged }: { onLogged: () => void }) {
               </span>
             </div>
           ) : preview ? (
-            <div className="relative overflow-hidden rounded-xl border border-[#E5E0D3] bg-[#F2EFE8]">
-              <img
+            <div
+              data-testid="identify-preview"
+              className="relative overflow-hidden rounded-xl border border-[#E5E0D3] bg-[#F2EFE8]"
+            >
+              <SnapshotWithBox
                 src={preview}
                 alt="Frame submitted for identification"
-                data-testid="identify-preview"
-                className="aspect-video w-full object-contain"
+                box={result?.is_animal ? result.box : null}
+                label={
+                  result?.is_animal && result.species
+                    ? `${result.species} · ${(result.confidence ?? 0).toFixed(0)}%`
+                    : undefined
+                }
+                testId="identify-bbox"
+                className="aspect-video w-full"
               />
               {identify.isPending && (
                 <div className="absolute inset-x-0 h-14 animate-[scan_2.2s_ease-in-out_infinite] bg-gradient-to-b from-transparent via-[#6EE7B7]/40 to-transparent" />

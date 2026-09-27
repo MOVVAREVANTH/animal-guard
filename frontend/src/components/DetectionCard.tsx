@@ -4,6 +4,7 @@ import { Camera, Clock, ExternalLink, Images, Loader2, Mail, MessageSquare, Rota
 import { SiWhatsapp } from "@icons-pack/react-simple-icons";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import SnapshotWithBox from "@/components/SnapshotWithBox";
 import type { AlertChannel, Detection, DetectionCategory } from "@/types/detection";
 
 const CATEGORY_STYLES: Record<DetectionCategory, { label: string; className: string }> = {
@@ -98,11 +99,23 @@ export default function DetectionCard({
       )}
 
       <div className="grid grid-cols-2 gap-2 px-5">
-        <SnapshotPane
-          src={detection.image_url}
-          alt={`${detection.species} — camera snapshot`}
-          label="Camera snapshot"
-        />
+        {detection.bbox ? (
+          <SnapshotWithBox
+            src={detection.image_url}
+            alt={`${detection.species} — camera snapshot with detection box`}
+            box={detection.bbox}
+            label={`${detection.species} · ${detection.confidence.toFixed(0)}%`}
+            caption="Camera snapshot"
+            testId={`detection-bbox-${detection.id}`}
+            className="aspect-square w-full rounded-lg border border-[#E5E0D3]"
+          />
+        ) : (
+          <SnapshotPane
+            src={detection.image_url}
+            alt={`${detection.species} — camera snapshot`}
+            label="Camera snapshot"
+          />
+        )}
         <SnapshotPane
           src={detection.flickr_reference_url}
           alt={`${detection.species} — Flickr reference`}

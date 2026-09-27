@@ -13,6 +13,7 @@ from pymongo import DESCENDING, ReturnDocument
 from lib.db import db
 from lib.vision import VisionUnavailable, identify_species
 from models.detection import (
+    BoundingBox,
     Detection,
     DetectionCreate,
     DetectionStats,
@@ -252,6 +253,7 @@ async def identify_detection(input: IdentifyRequest):
 
     species = verdict["species"]
     category = verdict["category"]
+    box = BoundingBox(**verdict["box"]) if verdict.get("box") else None
     mime = "image/jpeg" if input.mime_type in ("", "image/jpg") else input.mime_type
     snapshot = input.image_base64
     if not snapshot.startswith("data:"):
@@ -268,6 +270,7 @@ async def identify_detection(input: IdentifyRequest):
         camera="WEB DEMO · Live Identify",
         alert_channels=random_alert_channels(),
         source="web-demo",
+        bbox=box,
     )
     await db.detections.insert_one(detection.model_dump())
 
@@ -276,6 +279,7 @@ async def identify_detection(input: IdentifyRequest):
         species=species,
         category=category,
         confidence=verdict["confidence"],
+        box=box,
         note=verdict.get("note"),
         detection=detection,
     )

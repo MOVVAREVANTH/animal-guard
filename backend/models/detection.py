@@ -15,6 +15,15 @@ def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+class BoundingBox(BaseModel):
+    """Animal box as fractions of the image (x/y = top-left corner)."""
+
+    x: float = Field(ge=0, le=1)
+    y: float = Field(ge=0, le=1)
+    w: float = Field(gt=0, le=1)
+    h: float = Field(gt=0, le=1)
+
+
 class Detection(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     species: str
@@ -28,6 +37,7 @@ class Detection(BaseModel):
     alert_channels: list[AlertChannel] = Field(default_factory=list)  # what fired
     replay_count: int = 0  # times alerts were re-fired for this row (test path)
     source: str = "pi"  # "pi" (edge node) | "web-demo" (browser upload/webcam)
+    bbox: BoundingBox | None = None  # where the animal sits in image_url
 
 
 class IdentifyRequest(BaseModel):
@@ -42,6 +52,7 @@ class IdentifyResult(BaseModel):
     species: str | None = None
     category: Category | None = None
     confidence: float | None = None
+    box: BoundingBox | None = None  # normalised box for the submitted frame
     note: str | None = None  # why nothing was detected, or extra detail
     detection: Detection | None = None  # set when the result was logged
 

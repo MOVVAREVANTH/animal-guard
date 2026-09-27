@@ -11,7 +11,7 @@ Two-part site for a Raspberry Pi wildlife/livestock detection system:
 - Theme: cream #FBF9F4 bg, forest greens #142B1B/#2D6A4F, terracotta #C85A17 accent; fonts Outfit (heading) / DM Sans (body) / JetBrains Mono (telemetry).
 
 ## Integrations
-- **Vision species ID** (`backend/lib/vision.py`): Gemini 3 Flash (`gemini-3-flash-preview`) via `emergentintegrations` LlmChat, key `EMERGENT_LLM_KEY` in `backend/.env`. Returns strict JSON {is_animal, species, category, confidence, note}; non-animal images return is_animal=false with a reason. Accepts JPEG/PNG/WebP base64 or data URL; 422 on bad payload, 503 when the provider/key is unavailable. Testing rules for images: `/app/image_testing.md`.
+- **Vision species ID** (`backend/lib/vision.py`): Gemini 3 Flash (`gemini-3-flash-preview`) via `emergentintegrations` LlmChat, key `EMERGENT_LLM_KEY` in `backend/.env`. Returns strict JSON {is_animal, species, category, confidence, box, note}; `box` is a normalised bounding box {x,y,w,h} as fractions of the image (percentages auto-converted, degenerate boxes dropped), stored on the Detection as `bbox` and drawn over the snapshot by `frontend/src/components/SnapshotWithBox.tsx`. Non-animal images return is_animal=false with a reason. Accepts JPEG/PNG/WebP base64 or data URL; 422 on bad payload, 503 when the provider/key is unavailable. Testing rules for images: `/app/image_testing.md`.
 
 ## API contract (matches user's existing `animal-guard/backend/app.py`)
 - `GET /api/detections?category=wild|cattle|domestic&limit=50` → `[{id, species, category, confidence, image_url, flickr_reference_url, flickr_page_url, created_at}]` sorted newest-first. Invalid category → 400.

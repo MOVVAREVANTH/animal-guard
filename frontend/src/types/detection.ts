@@ -3,6 +3,14 @@
 export type DetectionCategory = "wild" | "cattle" | "domestic";
 export type AlertChannel = "email" | "sms" | "whatsapp";
 
+// Mirrors BoundingBox in backend/models/detection.py — fractions of the image.
+export interface BoundingBox {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 export interface Detection {
   id: string;
   species: string;
@@ -16,6 +24,7 @@ export interface Detection {
   alert_channels?: AlertChannel[]; // which alert channels fired
   replay_count?: number; // times alerts were re-fired for this row (test path)
   source?: string; // "pi" | "web-demo"
+  bbox?: BoundingBox | null; // where the animal sits inside image_url
 }
 
 export interface DetectionStats {
@@ -31,6 +40,7 @@ export interface IdentifyResult {
   species?: string | null;
   category?: DetectionCategory | null;
   confidence?: number | null;
+  box?: BoundingBox | null;
   note?: string | null;
   detection?: Detection | null;
 }
