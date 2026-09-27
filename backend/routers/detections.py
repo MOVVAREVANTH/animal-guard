@@ -1,11 +1,13 @@
 """Detections — the ingest + read API the Raspberry Pi node and the dashboard talk to."""
 
+import csv
+import io
 import random
 from datetime import datetime, timezone
 from typing import List
 from urllib.parse import quote
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Response
 from pymongo import DESCENDING
 
 from lib.db import db
@@ -14,6 +16,25 @@ from models.detection import Detection, DetectionCreate, DetectionStats, utc_now
 router = APIRouter()
 
 VALID_CATEGORIES = ("wild", "cattle", "domestic")
+
+ALERT_CHANNELS = ("email", "sms", "whatsapp")
+
+CAMERAS = (
+    "CAM 01 · North Fence",
+    "CAM 02 · Water Trough",
+    "CAM 03 · Barn Door",
+    "CAM 04 · South Pasture",
+)
+
+
+def random_alert_channels() -> list[str]:
+    """Realistic dispatch pattern: email always, SMS and WhatsApp mostly."""
+    channels = ["email"]
+    if random.random() < 0.9:
+        channels.append("sms")
+    if random.random() < 0.85:
+        channels.append("whatsapp")
+    return channels
 
 
 def flickr_page_url(species: str) -> str:
@@ -143,6 +164,45 @@ async def simulate_detection(
         flickr_reference_url=meta["reference"],
         flickr_page_url=flickr_page_url(species),
         created_at=utc_now(),
+        camera=random.choice(CAMERAS),
+        alert_channels=random_alert_channels(),
     )
     await db.detections.insert_one(detection.model_dump())
     return detection
+
+
+@router.get("/detections/export.csv")
+async def export_detections_csv(
+    category: str | None = Query(default=None, description="wild | cattle | domestic"),
+    limit: int = Query(default=500, ge=1, le=1000),
+):
+    """The filtered detection history as a downloadable CSV for record-keeping."""
+    query: dict = {}
+    if category:
+        if category not in VALID_CATEGORIES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"unknown category '{category}' — use wild, cattle or domestic",
+            )
+        query["category"] = category
+    docs = await db.detections.find(query).sort("created_at", DESCENDING).to_list(limit)
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(
+        ["id", "species", "category", "confidence", "camera", "alert_channels",
+         "image_url", "flickr_reference_url", "flickr_page_url", "created_at"]
+    )
+    for doc in docs:
+        d = Detection(**_normalize(doc))
+        writer.writerow(
+            [d.id, d.species, d.category, d.confidence, d.camera or "",
+             "|".join(d.alert_channels), d.image_url, d.flickr_reference_url,
+             d.flickr_page_url, d.created_at.isoformat()]
+        )
+
+    return Response(
+        content=buf.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="animal-guard-detections.csv"'},
+    )

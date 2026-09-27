@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   Bird,
   Dog,
+  Download,
   FlaskConical,
   Loader2,
   PawPrint,
@@ -12,8 +13,9 @@ import {
   WifiOff,
   type LucideIcon,
 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/config";
 import { apiGet, apiPost } from "@/lib/api";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import DetectionCard from "@/components/DetectionCard";
 import Footer from "@/components/Footer";
@@ -40,13 +42,12 @@ export default function Dashboard() {
   const [filter, setFilter] = useState<CategoryFilter>("all");
   const queryClient = useQueryClient();
 
+  const listParams = new URLSearchParams({ limit: "50" });
+  if (filter !== "all") listParams.set("category", filter);
+
   const detectionsQuery = useQuery({
     queryKey: ["detections", filter],
-    queryFn: () => {
-      const params = new URLSearchParams({ limit: "50" });
-      if (filter !== "all") params.set("category", filter);
-      return apiGet<Detection[]>(`/detections?${params.toString()}`);
-    },
+    queryFn: () => apiGet<Detection[]>(`/detections?${listParams.toString()}`),
     refetchInterval: POLL_MS,
   });
 
@@ -172,11 +173,22 @@ export default function Dashboard() {
                 </Button>
               ))}
             </div>
-            <p data-testid="last-updated" className="font-mono text-xs text-[#526756]">
-              {detectionsQuery.dataUpdatedAt
-                ? `updated ${format(new Date(detectionsQuery.dataUpdatedAt), "HH:mm:ss")}`
-                : "connecting…"}
-            </p>
+            <div className="flex items-center gap-3">
+              <p data-testid="last-updated" className="font-mono text-xs text-[#526756]">
+                {detectionsQuery.dataUpdatedAt
+                  ? `updated ${format(new Date(detectionsQuery.dataUpdatedAt), "HH:mm:ss")}`
+                  : "connecting…"}
+              </p>
+              <a
+                data-testid="export-csv-button"
+                href={`${API_BASE_URL}/api/detections/export.csv?${listParams.toString()}`}
+                download="animal-guard-detections.csv"
+                className={buttonVariants({ variant: "outline", size: "sm", class: "gap-2" })}
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
+              </a>
+            </div>
           </div>
 
           {detectionsQuery.isError && (

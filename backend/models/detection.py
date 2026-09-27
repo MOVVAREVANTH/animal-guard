@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 Category = Literal["wild", "cattle", "domestic"]
+AlertChannel = Literal["email", "sms", "whatsapp"]
 
 
 def utc_now() -> datetime:
@@ -23,6 +24,8 @@ class Detection(BaseModel):
     flickr_reference_url: str
     flickr_page_url: str
     created_at: datetime = Field(default_factory=utc_now)
+    camera: str | None = None  # which node saw it, e.g. "CAM 01 · North Fence"
+    alert_channels: list[AlertChannel] = Field(default_factory=list)  # what fired
 
 
 class DetectionCreate(BaseModel):
@@ -34,6 +37,8 @@ class DetectionCreate(BaseModel):
     image_url: str
     flickr_reference_url: str
     flickr_page_url: str
+    camera: str | None = None
+    alert_channels: list[AlertChannel] = Field(default_factory=list)
 
 
 class DetectionStats(BaseModel):

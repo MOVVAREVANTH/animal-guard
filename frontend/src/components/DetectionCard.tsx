@@ -1,13 +1,24 @@
+import type { ComponentType } from "react";
 import { format } from "date-fns";
-import { Clock, ExternalLink, Images } from "lucide-react";
+import { Camera, Clock, ExternalLink, Images, Mail, MessageSquare } from "lucide-react";
+import { SiWhatsapp } from "@icons-pack/react-simple-icons";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import type { Detection, DetectionCategory } from "@/types/detection";
+import type { AlertChannel, Detection, DetectionCategory } from "@/types/detection";
 
 const CATEGORY_STYLES: Record<DetectionCategory, { label: string; className: string }> = {
   wild: { label: "Wild", className: "border-[#FECACA] bg-[#FEF2F2] text-[#991B1B]" },
   cattle: { label: "Cattle", className: "border-[#FDE68A] bg-[#FEF3C7] text-[#92400E]" },
   domestic: { label: "Domestic", className: "border-[#A7F3D0] bg-[#ECFDF5] text-[#065F46]" },
+};
+
+const CHANNEL_META: Record<
+  AlertChannel,
+  { label: string; icon: ComponentType<{ className?: string }> }
+> = {
+  email: { label: "Email", icon: Mail },
+  sms: { label: "SMS", icon: MessageSquare },
+  whatsapp: { label: "WhatsApp", icon: SiWhatsapp },
 };
 
 function confidenceTone(confidence: number): string {
@@ -99,6 +110,40 @@ export default function DetectionCard({ detection }: { detection: Detection }) {
               style={{ width: `${Math.min(100, Math.max(0, detection.confidence))}%` }}
             />
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {detection.camera ? (
+            <span
+              data-testid={`detection-camera-${detection.id}`}
+              className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wide text-[#526756]"
+            >
+              <Camera className="h-3.5 w-3.5" />
+              {detection.camera}
+            </span>
+          ) : (
+            <span />
+          )}
+          {(detection.alert_channels?.length ?? 0) > 0 && (
+            <div
+              className="flex flex-wrap items-center gap-1.5"
+              data-testid={`detection-alerts-${detection.id}`}
+            >
+              {detection.alert_channels!.map((channel) => {
+                const ChannelIcon = CHANNEL_META[channel].icon;
+                return (
+                  <Badge
+                    key={channel}
+                    variant="outline"
+                    className="gap-1 border-[#E5E0D3] bg-[#F2EFE8] px-1.5 py-0 font-mono text-[10px] text-[#526756]"
+                  >
+                    <ChannelIcon className="h-3 w-3" />
+                    {CHANNEL_META[channel].label}
+                  </Badge>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between gap-3">
